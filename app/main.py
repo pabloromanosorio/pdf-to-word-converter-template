@@ -97,11 +97,7 @@ async def upload_file(
     margin_bottom: Optional[float] = Form(1.0),
     margin_left: Optional[float] = Form(1.0),
     margin_right: Optional[float] = Form(1.0),
-    signature_handling: str = Form("Transcribe with '[Signature]' text on an independent line"),
-    seal_handling: str = Form("Transcribe seal text and prefix with '[Seal]'"),
-    currency_format: str = Form("Default (e.g., $1,234.56)"),
-    numbers_format: str = Form("Default (e.g., 1,234.56)"),
-    general_instructions: str = Form("None"),
+    custom_prompt: str = Form(...),
     needs_correction: bool = Form(False),
     correction_instructions: str = Form("None"),
 ):
@@ -110,13 +106,7 @@ async def upload_file(
     # --- Initial AI Conversion ---
     image_part = Part.from_data(mime_type=file.content_type, data=await file.read())
     
-    prompt = BASE_PROMPT.format(
-        signature_handling=signature_handling,
-        seal_handling=seal_handling,
-        currency_format=currency_format,
-        numbers_format=numbers_format,
-        general_instructions=general_instructions
-    )
+    prompt = custom_prompt
     
     model = GenerativeModel(model_choice)
     response = await model.generate_content_async([image_part, prompt])
