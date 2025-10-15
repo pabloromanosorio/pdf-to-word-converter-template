@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced PDF to DOCX Converter</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; padding: 2em; max-width: 800px; margin: auto; background-color: #f4f4f9; color: #333; }
+        h1 { color: #2c3e50; }
+        form { background-color: #fff; border: 1px solid #ddd; padding: 2em; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        label { display: block; margin-bottom: 0.5em; font-weight: bold; color: #555; }
+        input[type="file"], input[type="number"], select, textarea { width: 100%; padding: 0.8em; margin-bottom: 1.2em; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; background-color: #fafafa; }
+        button { background-color: #007bff; color: white; padding: 0.9em 1.8em; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        .model-option-note { font-size: 0.85em; color: #666; margin-left: 8px; }
+        details { border: 1px solid #ddd; border-radius: 4px; margin-bottom: 1.2em; padding: 0.5em; }
+        summary { font-weight: bold; cursor: pointer; padding: 0.5em; }
+        .details-content { padding: 1em; border-top: 1px solid #eee; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1em; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>Enhanced PDF to DOCX Converter</h1>
+    <p>Upload a PDF or image, customize the conversion with advanced options, and generate a DOCX document.</p>
+
+    <form action="/upload" method="post" enctype="multipart/form-data">
+
+        <label for="file">1. Choose a PDF or image file to convert:</label>
+        <input type="file" name="file" id="file" required>
+
+        <label for="model_choice">2. Select an AI Model:</label>
+        <select name="model_choice" id="model_choice">
+            {% for model_id, model_info in models.items() %}
+                <option value="{{ model_id }}">
+                    {{ model_info.name }}
+                    <span class="model-option-note"> (Input: {{ model_info.pricing_input }} / Output: {{ model_info.pricing_output }})</span>
+                </option>
+            {% endfor %}
+        </select>
+
+        <details>
+            <summary>3. Advanced Formatting Options</summary>
+            <div class="details-content">
+                <p>Set page margins by uploading a reference DOCX or by entering values directly (in inches).</p>
+                <label for="reference_docx">Reference DOCX (optional):</label>
+                <input type="file" name="reference_docx" id="reference_docx" accept=".docx">
+                
+                <div id="margin_inputs">
+                    <label>Manual Margins (inches):</label>
+                    <div class="form-grid">
+                        <div>
+                            <label for="margin_top">Top:</label>
+                            <input type="number" name="margin_top" id="margin_top" value="1.0" step="0.1">
+                        </div>
+                        <div>
+                            <label for="margin_bottom">Bottom:</label>
+                            <input type="number" name="margin_bottom" id="margin_bottom" value="1.0" step="0.1">
+                        </div>
+                        <div>
+                            <label for="margin_left">Left:</label>
+                            <input type="number" name="margin_left" id="margin_left" value="1.0" step="0.1">
+                        </div>
+                        <div>
+                            <label for="margin_right">Right:</label>
+                            <input type="number" name="margin_right" id="margin_right" value="1.0" step="0.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>4. Prompt Customization</summary>
+            <div class="details-content">
+                <div class="form-grid">
+                    <div>
+                        <label for="signature_handling">Signature Handling:</label>
+                        <select name="signature_handling" id="signature_handling">
+                            <option>Transcribe with '[Signature]' text on an independent line</option>
+                            <option>Omit signatures entirely</option>
+                            <option>Describe the signature's appearance</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="seal_handling">Seal Handling:</label>
+                        <select name="seal_handling" id="seal_handling">
+                            <option>Transcribe seal text and prefix with '[Seal]'</option>
+                            <option>Omit seals entirely</option>
+                            <option>Describe the seal's appearance</option>
+                        </select>
+                    </div>
+                </div>
+                <label for="currency_format">Currency Format:</label>
+                <input type="text" name="currency_format" id="currency_format" value="Default (e.g., $1,234.56)">
+
+                <label for="numbers_format">Number Format:</label>
+                <input type="text" name="numbers_format" id="numbers_format" value="Default (e.g., 1,234.56)">
+
+                <label for="general_instructions">General Instructions:</label>
+                <textarea name="general_instructions" id="general_instructions" rows="4" placeholder="e.g., 'This is a two-column document, please preserve the reading order.' or 'The document is a bank statement.'"></textarea>
+            </div>
+        </details>
+
+        <details open>
+            <summary>5. Live Prompt Preview</summary>
+            <div class="details-content">
+                <textarea id="prompt-preview" rows="15" readonly style="width: 100%; background-color: #e9ecef; font-family: monospace; font-size: 0.9em;"></textarea>
+            </div>
+        </details>
+
+        <details>
+            <summary>6. Optional Correction Run</summary>
+            <div class="details-content">
+                <div>
+                    <input type="checkbox" id="needs_correction" name="needs_correction" value="true" style="width: auto; margin-bottom: 0;">
+                    <label for="needs_correction" style="display: inline-block; font-weight: normal;">Perform a second AI run to correct the first output?</label>
+                </div>
+                <div id="correction_instructions_wrapper" class="hidden">
+                    <label for="correction_instructions">Correction Instructions:</label>
+                    <textarea name="correction_instructions" id="correction_instructions" rows="4" placeholder="e.g., 'Change all dates to YYYY-MM-DD format.' or 'Remove the header from the first page.'"></textarea>
+                </div>
+            </div>
+        </details>
+
+        <button type="submit">Upload and Process</button>
+    </form>
+
+    <script>
+        const promptFormFields = [
+            'signature_handling', 'seal_handling', 'currency_format', 
+            'numbers_format', 'general_instructions'
+        ];
+
+        async function updatePromptPreview() {
+            const payload = {};
+            promptFormFields.forEach(id => {
+                payload[id] = document.getElementById(id).value;
+            });
+
+            try {
+                const response = await fetch('/preview-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                document.getElementById('prompt-preview').value = data.prompt;
+            } catch (error) {
+                console.error("Error updating prompt preview:", error);
+                document.getElementById('prompt-preview').value = "Error generating prompt preview.";
+            }
+        }
+
+        promptFormFields.forEach(id => {
+            document.getElementById(id).addEventListener('change', updatePromptPreview);
+            document.getElementById(id).addEventListener('keyup', updatePromptPreview);
+        });
+
+        document.getElementById('reference_docx').addEventListener('change', function() {
+            const marginInputs = document.getElementById('margin_inputs');
+            if (this.files && this.files.length > 0) {
+                marginInputs.classList.add('hidden');
+            } else {
+                marginInputs.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('needs_correction').addEventListener('change', function() {
+            const correctionWrapper = document.getElementById('correction_instructions_wrapper');
+            if (this.checked) {
+                correctionWrapper.classList.remove('hidden');
+            } else {
+                correctionWrapper.classList.add('hidden');
+            }
+        });
+
+        // Initial prompt load
+        document.addEventListener('DOMContentLoaded', updatePromptPreview);
+    </script>
+
+</body>
+</html>

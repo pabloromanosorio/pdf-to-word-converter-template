@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+google-cloud-aiplatform
+google-cloud-documentai
+html-for-docx
+jinja2
+pytest
+httpx
+python-dotenv
