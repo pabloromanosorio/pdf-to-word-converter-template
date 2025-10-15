@@ -55,6 +55,8 @@ CORRECTION_PROMPT = load_prompt("correction_prompt.txt")
 from pydantic import BaseModel
 
 
+import re
+
 # --- Data Models ---
 class PromptOptions(BaseModel):
     signature_handling: str
@@ -62,6 +64,11 @@ class PromptOptions(BaseModel):
     currency_format: str
     numbers_format: str
     general_instructions: str
+
+
+class SavePromptOptions(BaseModel):
+    filename: str
+    content: str
 
 
 # --- FastAPI App Setup ---
@@ -86,6 +93,47 @@ async def preview_prompt(options: PromptOptions):
         general_instructions=options.general_instructions
     )
     return {"prompt": prompt}
+
+
+@app.get("/list-prompts")
+async def list_prompts():
+    """Lists all available prompt files."""
+    try:
+        files = [f for f in os.listdir("prompts") if f.endswith(".txt")]
+        return {"prompts": files}
+    except FileNotFoundError:
+        return {"prompts": []}
+
+
+@app.get("/load-prompt/{filename}")
+async def load_prompt_file(filename: str):
+    """Loads a specific prompt file's content."""
+    # Basic security: prevent directory traversal
+    if ".." in filename or "/" in filename:
+        return {"error": "Invalid filename"}
+    try:
+        with open(f"prompts/{filename}", "r") as f:
+            return {"content": f.read()}
+    except FileNotFoundError:
+        return {"error": "File not found"}
+
+
+@app.post("/save-prompt")
+async def save_prompt(options: SavePromptOptions):
+    """Saves content to a new prompt file."""
+    # Sanitize filename: allow letters, numbers, underscores, hyphens
+    safe_filename = re.sub(r'[^a-zA-Z0-9_\-]', '', options.filename)
+    if not safe_filename:
+        return {"error": "Invalid filename provided."}
+    
+    safe_filename += ".txt"
+    
+    try:
+        with open(f"prompts/{safe_filename}", "w") as f:
+            f.write(options.content)
+        return {"success": True, "filename": safe_filename}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.post("/upload")

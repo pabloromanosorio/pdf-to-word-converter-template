@@ -105,6 +105,16 @@
         <details open>
             <summary>5. Live Prompt Preview</summary>
             <div class="details-content">
+                <div class="form-grid" style="margin-bottom: 1em;">
+                    <div>
+                        <label for="prompt-loader">Load Saved Prompt:</label>
+                        <select id="prompt-loader" name="prompt-loader"></select>
+                    </div>
+                    <div>
+                        <label>&nbsp;</label> <!-- Spacer for alignment -->
+                        <button type="button" id="save-prompt-btn" style="width: auto;">Save Current Prompt</button>
+                    </div>
+                </div>
                 <textarea id="prompt-preview" name="custom_prompt" rows="15" style="width: 100%; background-color: #e9ecef; font-family: monospace; font-size: 0.9em;"></textarea>
             </div>
         </details>
@@ -178,7 +188,70 @@
         });
 
         // Initial prompt load
-        document.addEventListener('DOMContentLoaded', updatePromptPreview);
+        document.addEventListener('DOMContentLoaded', async () => {
+            await updatePromptPreview();
+            await loadPromptList();
+        });
+
+        async function loadPromptList() {
+            try {
+                const response = await fetch('/list-prompts');
+                const data = await response.json();
+                const loader = document.getElementById('prompt-loader');
+                loader.innerHTML = '<option value="">Select a prompt to load...</option>'; // Reset
+                data.prompts.forEach(filename => {
+                    const option = document.createElement('option');
+                    option.value = filename;
+                    option.textContent = filename;
+                    loader.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error loading prompt list:", error);
+            }
+        }
+
+        document.getElementById('prompt-loader').addEventListener('change', async function() {
+            const filename = this.value;
+            if (!filename) return;
+
+            try {
+                const response = await fetch(`/load-prompt/${filename}`);
+                const data = await response.json();
+                if (data.content) {
+                    document.getElementById('prompt-preview').value = data.content;
+                } else {
+                    alert(data.error || 'Could not load prompt.');
+                }
+            } catch (error) {
+                console.error("Error loading prompt:", error);
+            }
+        });
+
+        document.getElementById('save-prompt-btn').addEventListener('click', async function() {
+            const filename = prompt("Enter a filename for your prompt (e.g., 'my_legal_prompt'):");
+            if (!filename) return;
+
+            const content = document.getElementById('prompt-preview').value;
+            
+            try {
+                const response = await fetch('/save-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ filename, content })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Prompt saved as ${data.filename}`);
+                    await loadPromptList(); // Refresh the list
+                } else {
+                    alert(data.error || 'Could not save prompt.');
+                }
+            } catch (error) {
+                console.error("Error saving prompt:", error);
+            }
+        });
     </script>
 
 </body>
