@@ -33,11 +33,12 @@
         <select name="model_choice" id="model_choice">
             {% for model_id, model_info in models.items() %}
                 <option value="{{ model_id }}">
-                    {{ model_info.name }}
-                    <span class="model-option-note"> (Input: {{ model_info.pricing_input }} / Output: {{ model_info.pricing_output }})</span>
+                    {{ model_info.name }} 
+                    <span class="model-option-note"> ({{ model_info.pricing_page }}, based on output cost)</span>
                 </option>
             {% endfor %}
         </select>
+        <p style="font-size: 0.8em; color: #666; margin-top: -1em; margin-bottom: 1.2em;">{{ pricing_note }}</p>
 
         <details>
             <summary>3. Advanced Formatting Options</summary>

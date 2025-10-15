@@ -39,14 +39,18 @@ GEMINI_MODELS = {
     "gemini-2.5-flash": {
         "name": "Gemini 2.5 Flash",
         "pricing_input": "$0.075 / 1M tokens",
-        "pricing_output": "$0.30 / 1M tokens"
+        "pricing_output": "$0.30 / 1M tokens",
+        "pricing_page": "~$0.0003 / page"
     },
     "gemini-2.5-pro": {
         "name": "Gemini 2.5 Pro",
         "pricing_input": "$7.00 / 1M tokens",
-        "pricing_output": "$21.00 / 1M tokens"
+        "pricing_output": "$21.00 / 1M tokens",
+        "pricing_page": "~$0.021 / page"
     }
 }
+
+PRICING_NOTE = "Page cost is an estimate based on output pricing and an average of 1,000 tokens per page."
 
 BASE_PROMPT = load_prompt("base_prompt.txt")
 CORRECTION_PROMPT = load_prompt("correction_prompt.txt")
@@ -79,7 +83,7 @@ templates = Jinja2Templates(directory="app/templates")
 @app.get("/")
 def read_root(request: Request):
     """Serves the initial HTML page and provides model information."""
-    return templates.TemplateResponse("index.html", {"request": request, "models": GEMINI_MODELS})
+    return templates.TemplateResponse("index.html", {"request": request, "models": GEMINI_MODELS, "pricing_note": PRICING_NOTE})
 
 
 @app.post("/preview-prompt")
