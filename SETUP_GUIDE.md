@@ -74,3 +74,36 @@ We will use the Gemini CLI inside the Cursor code editor to perform the deployme
 5.  **Success!**
     *   Once complete, Gemini will provide you with the URL for your live application.
     *   Congratulations! You now have your own private, AI-powered document conversion tool.
+
+## Part 4: Common Issues (Troubleshooting)
+
+If you run into an error, don't worry! Here are some of the most common issues and how to solve them.
+
+### Issue: `gcloud: command not found`
+
+*   **What it means:** Your computer can't find the Google Cloud SDK command.
+*   **How to fix:**
+    1.  Make sure you have fully completed the installation from Part 2.
+    2.  The most common fix: **Close and re-open your terminal or Cursor application.** The installer often needs a restart to finalize the setup.
+    3.  If it still doesn't work, try running the installer again.
+
+### Issue: The command fails with a "Permission Denied" or "403" error
+
+*   **What it means:** Google Cloud doesn't think you have the authority to perform the action. This is usually a stale login.
+*   **How to fix:**
+    1.  Run the authentication commands from Part 2 again to refresh your credentials:
+        ```bash
+        gcloud auth login
+        ```
+    2.  And then:
+        ```bash
+        gcloud auth application-default login
+        ```
+
+### Issue: The deployment fails with a "Billing" error
+
+*   **What it means:** Your Google Cloud project is not linked to an active billing account. While you get a large free tier, a billing account is required to use most services.
+*   **How to fix:**
+    1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
+    2.  In the navigation menu (☰), find **"Billing"**.
+    3.  Follow the instructions to either link your project to your existing billing account or to create a new one.
