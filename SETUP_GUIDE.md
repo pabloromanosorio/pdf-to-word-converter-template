@@ -34,6 +34,7 @@ We need to install a special command-line tool called the Google Cloud SDK (or `
 1.  **Install the Google Cloud SDK:**
     *   Go to the official installation page: [https://cloud.google.com/sdk/docs/install](https://cloud.google.com/sdk/docs/install)
     *   Follow the instructions for your operating system (Windows, macOS, or Linux).
+    *   *(Note: This single installation includes all the necessary components, like `gcloud run`, so no other installations are needed.)*
 
 2.  **Connect Your Computer to Your Google Account:**
     *   Open a new terminal or command prompt.
